@@ -223,9 +223,14 @@ const download = () => {
       <n-modal v-model:show="previewShow"
                preset="dialog"
                title="保存图片">
-        <p>{{ isMobile ? '长按来保存图片' : '右键另存为来保存图片' }}</p>
+        <p>{{ isMobile ? '长按来保存图片' : '右键另存为图片或者点击按钮下载' }}</p>
         <img id="preview-image" :src="previewImage" alt=""/>
-        <n-button type="primary" ghost @click="download" :disabled="imagePath == ''" icon-placement="left">
+        <n-button type="primary"
+                  ghost
+                  @click="download"
+                  :disabled="imagePath == ''"
+                  icon-placement="left"
+                  v-show="!isMobile">
           <template #icon>
             <n-icon>
               <download-outline />
