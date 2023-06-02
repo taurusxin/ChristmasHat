@@ -2,7 +2,7 @@
 import { ImageOutline, DownloadOutline } from '@vicons/ionicons5'
 import type { UploadFileInfo } from 'naive-ui'
 import { fabric } from 'fabric'
-import { saveAs } from 'file-saver';
+import { saveAs } from 'file-saver'
 
 const imageFile = ref()
 const imagePath = ref('')
@@ -121,6 +121,14 @@ const switchHatInCanvas = () => {
   }
 }
 
+const previewShow = ref(false)
+const previewImage = ref('')
+
+const save = () => {
+  previewShow.value = true
+  previewImage.value = canvasFabric.toDataURL()
+}
+
 const download = () => {
   saveAs(canvasFabric.toDataURL(), "christmas_hat_".concat((new Date).getTime().toString(), ".png"))
 }
@@ -191,13 +199,13 @@ const download = () => {
         </div>
 
         <h3 class="sub-title mt-15">制作完成了就下载吧</h3>
-        <n-button type="primary" ghost @click="download" :disabled="imagePath == ''" icon-placement="left">
+        <n-button type="primary" ghost @click="save" :disabled="imagePath == ''" icon-placement="left">
           <template #icon>
             <n-icon>
               <download-outline />
             </n-icon>
           </template>
-          下载图片
+          保存图片
         </n-button>
       </div>
 
@@ -211,6 +219,22 @@ const download = () => {
           <canvas id="cvs"></canvas>
         </div>
       </div>
+
+      <n-modal v-model:show="previewShow"
+               preset="dialog"
+               title="保存图片">
+        <p>{{ isMobile ? '长按来保存图片' : '右键另存为来保存图片' }}</p>
+        <img id="preview-image" :src="previewImage" alt=""/>
+        <n-button type="primary" ghost @click="download" :disabled="imagePath == ''" icon-placement="left">
+          <template #icon>
+            <n-icon>
+              <download-outline />
+            </n-icon>
+          </template>
+          下载到本地
+        </n-button>
+      </n-modal>
+
     </div>
   </main>
 </template>
@@ -294,5 +318,10 @@ main {
 
 #cvs {
   display: none;
+}
+
+#preview-image {
+  margin-top: 8px;
+  width: 100%;
 }
 </style>
