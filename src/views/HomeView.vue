@@ -108,6 +108,7 @@ const switchHatInCanvas = () => {
     rotatingPointOffset: 30
   })
   hatInstance.setControlVisible('mt', false)
+  hatInstance.cornerSize = 12
   canvasFabric.add(hatInstance)
   hatInstance.centerH()
 
