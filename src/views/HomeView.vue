@@ -105,10 +105,10 @@ const switchHatInCanvas = () => {
     cornerStrokeColor: '#fff',
     cornerStyle: 'circle',
     transparentCorners: false,
-    rotatingPointOffset: 30
+    rotatingPointOffset: 30,
+    cornerSize: 36
   })
   hatInstance.setControlVisible('mt', false)
-  hatInstance.cornerSize = 12
   canvasFabric.add(hatInstance)
   hatInstance.centerH()
 
