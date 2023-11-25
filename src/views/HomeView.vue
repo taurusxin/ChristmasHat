@@ -167,7 +167,7 @@ const download = () => {
         </div>
 
         <div>
-          <h3 class="sub-title mt-15">选择一顶圣诞帽</h3>
+          <h3 class="sub-title mt-15">选择一顶圣诞帽（左右滑动）</h3>
           <n-carousel
             :space-between="15"
             :loop="false"
