@@ -18,7 +18,7 @@ let isMobile = window.innerWidth <= 768
 
 onMounted(async () => {
   try {
-    const res = await fetch('/hats.json')
+    const res = await fetch('./hats.json')
     const data = await res.json()
     hatList.value = Array.isArray(data) ? data : []
   } catch (_) {
