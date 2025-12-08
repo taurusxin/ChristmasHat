@@ -6,7 +6,7 @@ import { saveAs } from 'file-saver'
 
 const imageFile = ref()
 const imagePath = ref('')
-const imageCount = ref(Array.from(new Array(30).keys()))
+const hatList = ref<string[]>([])
 const currentHat = ref(0)
 const uploadImageRef = ref()
 
@@ -15,6 +15,18 @@ let hatInstance: fabric.Image
 let imageWidth: number
 let imageHeight: number
 let isMobile = window.innerWidth <= 768
+
+onMounted(async () => {
+  try {
+    const res = await fetch('/hats.json')
+    const data = await res.json()
+    hatList.value = Array.isArray(data) ? data : []
+  } catch (_) {
+    hatList.value = Array.from(new Array(30).keys()).map(
+      i => `https://tools.taurusxin.com/assets/hats/${i}.png`
+    )
+  }
+})
 
 const switchHat = (currentIndex: number, lastIndex: number) => {
   currentHat.value = currentIndex
@@ -29,7 +41,11 @@ const chooseImage = () => {
   uploadImageRef.value.openOpenFileDialog()
 }
 
-const handleUploadImage = (options: { file: UploadFileInfo, fileList: Array<UploadFileInfo>, event?: Event }) => {
+const handleUploadImage = (options: {
+  file: UploadFileInfo
+  fileList: Array<UploadFileInfo>
+  event?: Event
+}) => {
   imageFile.value = options.file.file
   imagePath.value = imageFile.value.name
   loadImage()
@@ -44,7 +60,7 @@ const loadImage = () => {
     // load the image file
     let reader: FileReader = new FileReader()
     reader.readAsDataURL(file)
-    reader.onload = (e) => {
+    reader.onload = e => {
       img.src = reader.result as string
       img.onload = () => {
         cvs.width = img.width
@@ -56,10 +72,11 @@ const loadImage = () => {
         cvs.style.display = 'block'
         canvasFabric = new fabric.Canvas('cvs')
 
-        let e = isMobile ? 800 : 1600, scale = 1
-        if(imageWidth > e) {
+        let e = isMobile ? 800 : 1600,
+          scale = 1
+        if (imageWidth > e) {
           canvasFabric.setWidth(e)
-          canvasFabric.setHeight(e / imageWidth * imageHeight)
+          canvasFabric.setHeight((e / imageWidth) * imageHeight)
           scale = e / imageWidth
         } else {
           canvasFabric.setWidth(imageWidth)
@@ -73,7 +90,7 @@ const loadImage = () => {
           scaleY: scale,
           top: 0,
           left: 0,
-          selectable: false
+          selectable: false,
         })
 
         canvasFabric.setBackgroundImage(backgroundImage, () => {})
@@ -106,7 +123,7 @@ const switchHatInCanvas = () => {
     cornerStyle: 'circle',
     transparentCorners: false,
     rotatingPointOffset: 30,
-    cornerSize: 36
+    cornerSize: 36,
   })
   hatInstance.setControlVisible('mt', false)
   canvasFabric.add(hatInstance)
@@ -115,10 +132,14 @@ const switchHatInCanvas = () => {
   let cvsContainer = document.querySelector('.cvs-container') as HTMLDivElement
   let canvasWrapperEl = document.querySelector('.canvas-container') as HTMLDivElement
   let cvsContainerWidth = cvsContainer.offsetWidth
-  if (canvasFabric.width as number > cvsContainerWidth) {
-    canvasWrapperEl.style.transform = "scale(".concat((cvsContainerWidth / (canvasFabric.width as number)).toString(), ")")
-    canvasWrapperEl.style.width = "100%"
-    canvasWrapperEl.style.height = (canvasFabric.height as number) * (cvsContainerWidth / (canvasFabric.width as number)) + "px"
+  if ((canvasFabric.width as number) > cvsContainerWidth) {
+    canvasWrapperEl.style.transform = 'scale('.concat(
+      (cvsContainerWidth / (canvasFabric.width as number)).toString(),
+      ')'
+    )
+    canvasWrapperEl.style.width = '100%'
+    canvasWrapperEl.style.height =
+      (canvasFabric.height as number) * (cvsContainerWidth / (canvasFabric.width as number)) + 'px'
   }
 }
 
@@ -131,9 +152,8 @@ const save = () => {
 }
 
 const download = () => {
-  saveAs(canvasFabric.toDataURL(), "christmas_hat_".concat((new Date).getTime().toString(), ".png"))
+  saveAs(canvasFabric.toDataURL(), 'christmas_hat_'.concat(new Date().getTime().toString(), '.png'))
 }
-
 </script>
 
 <template>
@@ -146,14 +166,18 @@ const download = () => {
         <div>
           <h3 class="sub-title">选择要制作的图片</h3>
           <n-input-group>
-            <n-input class="choose-image"
-                    :placeholder="imagePath ? imagePath : '戳右边上传头像→'"
-                    :readonly="true" 
-                    type="text"/>
-            <n-upload :abstract="true"
-                      ref="uploadImageRef"
-                      accept="image/*"
-                      @change="handleUploadImage">
+            <n-input
+              class="choose-image"
+              :placeholder="imagePath ? imagePath : '戳右边上传头像→'"
+              :readonly="true"
+              type="text"
+            />
+            <n-upload
+              :abstract="true"
+              ref="uploadImageRef"
+              accept="image/*"
+              @change="handleUploadImage"
+            >
               <n-button type="primary" ghost @click="chooseImage" icon-placement="left">
                 <template #icon>
                   <n-icon>
@@ -176,22 +200,31 @@ const download = () => {
             slides-per-view="auto"
             centered-slides
             draggable
-            @update:current-index="switchHat">
-            <n-carousel-item class="hat-container"
-                            style="height: calc(1rem + 100px); width: calc(1rem + 100px)"
-                            v-for="(item, index) in imageCount"
-                            :key="index"
-                            @click="clickHat(index)">
-              <img
-                class="carousel-img"
-                :src="'https://cdn.taurusxin.com/tools/hats/' + index + '.png'"
-                crossorigin="anonymous"
-              >
+            @update:current-index="switchHat"
+          >
+            <n-carousel-item
+              class="hat-container"
+              style="height: calc(1rem + 100px); width: calc(1rem + 100px)"
+              v-for="(item, index) in hatList"
+              :key="index"
+              @click="clickHat(index)"
+            >
+              <img class="carousel-img" :src="item" crossorigin="anonymous" />
             </n-carousel-item>
           </n-carousel>
           <div class="up-arrow">
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon-tabler-arrow-up" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-              <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="icon-tabler-arrow-up"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              fill="none"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="18" y1="11" x2="12" y2="5" />
               <line x1="6" y1="11" x2="12" y2="5" />
@@ -200,7 +233,13 @@ const download = () => {
         </div>
 
         <h3 class="sub-title mt-15">制作完成了就下载吧</h3>
-        <n-button type="primary" ghost @click="save" :disabled="imagePath == ''" icon-placement="left">
+        <n-button
+          type="primary"
+          ghost
+          @click="save"
+          :disabled="imagePath == ''"
+          icon-placement="left"
+        >
           <template #icon>
             <n-icon>
               <download-outline />
@@ -210,28 +249,27 @@ const download = () => {
         </n-button>
       </div>
 
-      <div class="canvas-panel app-panel"
-           v-show="imageFile">
+      <div class="canvas-panel app-panel" v-show="imageFile">
         <div class="panel-title">
           <span class="title-text">预览和调整</span>
         </div>
-        <img id="image" src="" alt="" style="display: none"/>
+        <img id="image" src="" alt="" style="display: none" />
         <div class="cvs-container">
           <canvas id="cvs"></canvas>
         </div>
       </div>
 
-      <n-modal v-model:show="previewShow"
-               preset="dialog"
-               title="保存图片">
+      <n-modal v-model:show="previewShow" preset="dialog" title="保存图片">
         <p>{{ isMobile ? '长按来保存图片' : '右键另存为图片或者点击按钮下载' }}</p>
-        <img id="preview-image" :src="previewImage" alt=""/>
-        <n-button type="primary"
-                  ghost
-                  @click="download"
-                  :disabled="imagePath == ''"
-                  icon-placement="left"
-                  v-show="!isMobile">
+        <img id="preview-image" :src="previewImage" alt="" />
+        <n-button
+          type="primary"
+          ghost
+          @click="download"
+          :disabled="imagePath == ''"
+          icon-placement="left"
+          v-show="!isMobile"
+        >
           <template #icon>
             <n-icon>
               <download-outline />
@@ -240,7 +278,6 @@ const download = () => {
           下载到本地
         </n-button>
       </n-modal>
-
     </div>
   </main>
 </template>
