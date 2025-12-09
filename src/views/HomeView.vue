@@ -11,8 +11,8 @@ const handleResize = () => {
 }
 
 // Composables
-const { hatList, currentHat, selectHat } = useHatManager()
-const { imageFile, imagePath, loadImage } = useImageUpload()
+const { hatList, currentHat, selectHat, isLoading: isHatLoading, loadError: hatLoadError } = useHatManager()
+const { imageFile, imagePath, loadImage, isLoading: isImageLoading } = useImageUpload()
 const { isCanvasReady, initCanvas, addHat, adjustCanvasContainer, toDataURL } = useCanvasEditor(isMobile)
 
 // Template refs
@@ -124,27 +124,33 @@ const download = () => {
 
         <div>
           <h3 class="sub-title mt-15">选择一顶圣诞帽（左右滑动）</h3>
-          <n-carousel
-            :space-between="15"
-            :loop="false"
-            :show-dots="false"
-            :current-index="currentHat"
-            slides-per-view="auto"
-            centered-slides
-            draggable
-            @update:current-index="switchHat"
-          >
-            <n-carousel-item
-              class="hat-container"
-              style="height: calc(1rem + 100px); width: calc(1rem + 100px)"
-              v-for="(item, index) in hatList"
-              :key="index"
-              @click="clickHat(index)"
+          <n-spin :show="isHatLoading">
+            <n-carousel
+              v-if="hatList.length > 0"
+              :space-between="15"
+              :loop="false"
+              :show-dots="false"
+              :current-index="currentHat"
+              slides-per-view="auto"
+              centered-slides
+              draggable
+              @update:current-index="switchHat"
             >
-              <img class="carousel-img" :src="item" crossorigin="anonymous" />
-            </n-carousel-item>
-          </n-carousel>
-          <div class="up-arrow">
+              <n-carousel-item
+                class="hat-container"
+                style="height: calc(1rem + 100px); width: calc(1rem + 100px)"
+                v-for="(item, index) in hatList"
+                :key="index"
+                @click="clickHat(index)"
+              >
+                <img class="carousel-img" :src="item" crossorigin="anonymous" />
+              </n-carousel-item>
+            </n-carousel>
+            <n-alert v-if="hatLoadError && !isHatLoading" type="warning" :bordered="false">
+              帽子列表加载失败，已使用备用资源
+            </n-alert>
+          </n-spin>
+          <div class="up-arrow" v-if="hatList.length > 0">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               class="icon-tabler-arrow-up"
@@ -185,10 +191,12 @@ const download = () => {
         <div class="panel-title">
           <span class="title-text">预览和调整</span>
         </div>
-        <img ref="imgRef" src="" alt="" style="display: none" />
-        <div ref="cvsContainerRef" class="cvs-container">
-          <canvas ref="cvsRef"></canvas>
-        </div>
+        <n-spin :show="isImageLoading" description="正在处理图片...">
+          <img ref="imgRef" src="" alt="" style="display: none" />
+          <div ref="cvsContainerRef" class="cvs-container">
+            <canvas ref="cvsRef"></canvas>
+          </div>
+        </n-spin>
       </div>
 
       <n-modal v-model:show="previewShow" preset="dialog" title="保存图片">
