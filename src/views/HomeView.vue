@@ -28,6 +28,13 @@ onMounted(async () => {
   }
 })
 
+onUnmounted(() => {
+  // Clean up canvas instance when component unmounts
+  if (canvasFabric) {
+    canvasFabric.dispose()
+  }
+})
+
 const switchHat = (currentIndex: number, lastIndex: number) => {
   currentHat.value = currentIndex
   switchHatInCanvas()
@@ -70,6 +77,12 @@ const loadImage = () => {
         imageHeight = img.height
 
         cvs.style.display = 'block'
+
+        // Dispose old canvas instance to prevent memory leak
+        if (canvasFabric) {
+          canvasFabric.dispose()
+        }
+
         canvasFabric = new fabric.Canvas('cvs')
 
         let e = isMobile ? 800 : 1600,
