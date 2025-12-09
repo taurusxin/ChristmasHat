@@ -20,9 +20,16 @@ const handleResize = () => {
 }
 
 // Composables
-const { hatList, currentHat, selectHat, isLoading: isHatLoading, loadError: hatLoadError } = useHatManager()
+const {
+  hatList,
+  currentHat,
+  selectHat,
+  isLoading: isHatLoading,
+  loadError: hatLoadError,
+} = useHatManager()
 const { imageFile, imagePath, loadImage, isLoading: isImageLoading } = useImageUpload()
-const { isCanvasReady, initCanvas, addHat, adjustCanvasContainer, toDataURL } = useCanvasEditor(isMobile)
+const { isCanvasReady, initCanvas, addHat, adjustCanvasContainer, toDataURL } =
+  useCanvasEditor(isMobile)
 
 // Template refs
 const uploadImageRef = ref()
@@ -53,7 +60,7 @@ const handleUploadImage = async (options: {
 }) => {
   const file = options.file.file
   if (!file) return
-  
+
   imageFile.value = file
   imagePath.value = file.name
 
@@ -99,13 +106,19 @@ const save = () => {
 const download = () => {
   saveAs(toDataURL(), `christmas_hat_${Date.now()}.png`)
 }
+
+const goToBlog = () => {
+  window.open('https://www.taurusxin.com/', '_blank')
+}
+
+const icpNumber = '浙ICP备2022025362号-1'
 </script>
 
 <template>
   <main>
     <!-- 移动端语言切换浮动按钮 -->
-    <n-button 
-      class="lang-switch-mobile" 
+    <n-button
+      class="lang-switch-mobile"
       circle
       type="info"
       size="large"
@@ -114,16 +127,16 @@ const download = () => {
     >
       {{ locale === 'zh-CN' ? 'EN' : '中' }}
     </n-button>
-    
+
     <div class="main-container">
       <div class="main-panel app-panel">
         <div class="panel-title">
           <span class="title-text">{{ t('title') }}</span>
         </div>
-        
+
         <!-- PC端语言切换按钮 -->
         <div class="lang-switch-desktop">
-          <n-button 
+          <n-button
             size="small"
             quaternary
             @click="toggleLanguage"
@@ -131,13 +144,23 @@ const download = () => {
           >
             <template #icon>
               <n-icon>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="m5 8 6 6"/>
-                  <path d="m4 14 6-6 2-3"/>
-                  <path d="M2 5h12"/>
-                  <path d="M7 2h1"/>
-                  <path d="m22 22-5-10-5 10"/>
-                  <path d="M14 18h6"/>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="m5 8 6 6" />
+                  <path d="m4 14 6-6 2-3" />
+                  <path d="M2 5h12" />
+                  <path d="M7 2h1" />
+                  <path d="m22 22-5-10-5 10" />
+                  <path d="M14 18h6" />
                 </svg>
               </n-icon>
             </template>
@@ -147,9 +170,18 @@ const download = () => {
         <div>
           <h3 class="sub-title">{{ t('subtitle.selectImage') }}</h3>
           <n-input-group>
-            <n-input class="choose-image" :placeholder="imagePath ? imagePath : t('placeholders.uploadHint')" :readonly="true"
-              type="text" />
-            <n-upload :abstract="true" ref="uploadImageRef" accept="image/*" @change="handleUploadImage">
+            <n-input
+              class="choose-image"
+              :placeholder="imagePath ? imagePath : t('placeholders.uploadHint')"
+              :readonly="true"
+              type="text"
+            />
+            <n-upload
+              :abstract="true"
+              ref="uploadImageRef"
+              accept="image/*"
+              @change="handleUploadImage"
+            >
               <n-button type="primary" ghost @click="chooseImage" icon-placement="left">
                 <template #icon>
                   <n-icon>
@@ -165,11 +197,24 @@ const download = () => {
         <div>
           <h3 class="sub-title mt-15">{{ t('subtitle.selectHat') }}</h3>
           <n-spin :show="isHatLoading">
-            <n-carousel v-if="hatList.length > 0" :space-between="15" :loop="false" :show-dots="false"
-              :current-index="currentHat" slides-per-view="auto" centered-slides draggable
-              @update:current-index="switchHat">
-              <n-carousel-item class="hat-container" style="height: calc(1rem + 100px); width: calc(1rem + 100px)"
-                v-for="(item, index) in hatList" :key="index" @click="clickHat(index)">
+            <n-carousel
+              v-if="hatList.length > 0"
+              :space-between="15"
+              :loop="false"
+              :show-dots="false"
+              :current-index="currentHat"
+              slides-per-view="auto"
+              centered-slides
+              draggable
+              @update:current-index="switchHat"
+            >
+              <n-carousel-item
+                class="hat-container"
+                style="height: calc(1rem + 100px); width: calc(1rem + 100px)"
+                v-for="(item, index) in hatList"
+                :key="index"
+                @click="clickHat(index)"
+              >
                 <img class="carousel-img" :src="item" crossorigin="anonymous" />
               </n-carousel-item>
             </n-carousel>
@@ -178,8 +223,17 @@ const download = () => {
             </n-alert>
           </n-spin>
           <div class="up-arrow" v-if="hatList.length > 0">
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon-tabler-arrow-up" width="20" height="20"
-              viewBox="0 0 24 24" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="icon-tabler-arrow-up"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              fill="none"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
               <path stroke="none" d="M0 0h24v24H0z" fill="none" />
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="18" y1="11" x2="12" y2="5" />
@@ -189,7 +243,13 @@ const download = () => {
         </div>
 
         <h3 class="sub-title mt-15">{{ t('subtitle.download') }}</h3>
-        <n-button type="primary" ghost @click="save" :disabled="imagePath == ''" icon-placement="left">
+        <n-button
+          type="primary"
+          ghost
+          @click="save"
+          :disabled="imagePath == ''"
+          icon-placement="left"
+        >
           <template #icon>
             <n-icon>
               <download-outline />
@@ -197,6 +257,13 @@ const download = () => {
           </template>
           {{ t('buttons.saveImage') }}
         </n-button>
+
+      <div>
+        <h3 class="sub-title mt-15">{{ t('subtitle.description') }}</h3>
+        <n-button type="primary" @click="goToBlog" ghost>
+          {{ t('buttons.goToBlog') }}
+        </n-button>
+      </div>
       </div>
 
       <div class="canvas-panel app-panel" v-show="imageFile">
@@ -214,8 +281,14 @@ const download = () => {
       <n-modal v-model:show="previewShow" preset="dialog" :title="t('messages.saveImageDialog')">
         <p>{{ isMobile ? t('messages.mobileHint') : t('messages.desktopHint') }}</p>
         <img id="preview-image" :src="previewImage" alt="" />
-        <n-button type="primary" ghost @click="download" :disabled="imagePath == ''" icon-placement="left"
-          v-show="!isMobile">
+        <n-button
+          type="primary"
+          ghost
+          @click="download"
+          :disabled="imagePath == ''"
+          icon-placement="left"
+          v-show="!isMobile"
+        >
           <template #icon>
             <n-icon>
               <download-outline />
@@ -225,6 +298,9 @@ const download = () => {
         </n-button>
       </n-modal>
     </div>
+    <footer class="icp-footer">
+      <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">{{ icpNumber }}</a>
+    </footer>
   </main>
 </template>
 
@@ -323,7 +399,7 @@ main {
     /* 优化触摸响应 */
     touch-action: pan-x pan-y;
   }
-  
+
   .cvs-container canvas {
     /* 移动端禁用文本选择 */
     -webkit-touch-callout: none;
@@ -340,6 +416,29 @@ main {
 #preview-image {
   margin-top: 8px;
   width: 100%;
+}
+
+.icp-footer {
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--color-text);
+  padding: 0.3rem 0;
+}
+
+.icp-footer a {
+  color: inherit;
+  text-decoration: none;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.icp-footer a:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+.app-panel:last-of-type {
+  margin-bottom: 1rem;
 }
 
 /* 移动端语言切换按钮 - 浮动样式 */
@@ -397,7 +496,7 @@ main {
   .lang-switch-mobile {
     display: none !important;
   }
-  
+
   .lang-switch-desktop {
     display: block;
   }
@@ -410,7 +509,7 @@ main {
     height: 50px !important;
     font-size: 0.85rem !important;
   }
-  
+
   .lang-switch-desktop {
     display: none;
   }

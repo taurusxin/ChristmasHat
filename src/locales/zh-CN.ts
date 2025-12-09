@@ -3,12 +3,14 @@ export default {
   subtitle: {
     selectImage: '选择要制作的图片',
     selectHat: '选择一顶圣诞帽（左右滑动）',
-    download: '制作完成了就下载吧'
+    download: '制作完成了就下载吧',
+    description: '本站自2025年12月7日傍晚开始流量暴涨，博主已经对服务器进行了一次紧急扩容，如果你感到访问速度缓慢，敬请谅解~'
   },
   buttons: {
     selectImage: '选择图片',
     saveImage: '保存图片',
-    downloadLocal: '下载到本地'
+    downloadLocal: '下载到本地',
+    goToBlog: '点击这里去我的博客'
   },
   placeholders: {
     uploadHint: '戳右边上传头像→'
