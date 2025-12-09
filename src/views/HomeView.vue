@@ -307,6 +307,34 @@ main {
 
 .cvs-container canvas {
   display: block;
+  /* 移动端触摸优化 */
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* 移动端Canvas容器优化 */
+@media (max-width: 768px) {
+  .cvs-container {
+    /* 防止意外的触摸滚动 */
+    overflow: hidden;
+    /* 优化触摸响应 */
+    touch-action: pan-x pan-y;
+  }
+  
+  .cvs-container canvas {
+    /* 移动端禁用文本选择 */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    /* 优化触摸延迟 */
+    touch-action: manipulation;
+  }
 }
 
 #preview-image {

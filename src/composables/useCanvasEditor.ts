@@ -45,7 +45,14 @@ export function useCanvasEditor(isMobile: Ref<boolean>) {
           canvasFabric.dispose()
         }
 
-        canvasFabric = new fabric.Canvas(canvasEl)
+        canvasFabric = new fabric.Canvas(canvasEl, {
+          // 移动端优化配置
+          selection: !isMobile.value, // 移动端禁用范围选取
+          allowTouchScrolling: isMobile.value, // 移动端允许触摸滚动
+          stopContextMenu: true, // 禁用右键菜单
+          fireRightClick: false, // 禁用右键事件
+          fireMiddleClick: false, // 禁用中键事件
+        })
 
         const maxWidth = getMaxWidth()
         let scale = 1
@@ -97,12 +104,65 @@ export function useCanvasEditor(isMobile: Ref<boolean>) {
       cornerStyle: CANVAS_CONFIG.hat.cornerStyle,
       transparentCorners: CANVAS_CONFIG.hat.transparentCorners,
       rotatingPointOffset: CANVAS_CONFIG.hat.rotatingPointOffset,
-      cornerSize: CANVAS_CONFIG.hat.cornerSize,
+      cornerSize: isMobile.value ? 44 : CANVAS_CONFIG.hat.cornerSize, // 移动端更大的控制点
+      hasRotatingPoint: !isMobile.value, // 移动端禁用旋转点
     })
 
     hatInstance.setControlVisible('mt', false)
+    
+    // 移动端优化：禁用一些控制点
+    if (isMobile.value) {
+      hatInstance.setControlVisible('mtr', false) // 禁用旋转控制点
+      hatInstance.setControlVisible('ml', false)  // 禁用左侧控制点
+      hatInstance.setControlVisible('mr', false)  // 禁用右侧控制点
+      hatInstance.setControlVisible('mb', false)  // 禁用底部控制点
+    }
+    
     canvasFabric.add(hatInstance)
     hatInstance.centerH()
+    
+    // 移动端触摸优化
+    if (isMobile.value && canvasFabric) {
+      // 禁用画布的双击缩放
+      canvasFabric.off('mouse:dblclick')
+      
+      // 优化触摸事件
+      let touchStartTime = 0
+      let touchStartPos = { x: 0, y: 0 }
+      
+      canvasFabric.on('touch:gesture', (e) => {
+        // 阻止默认的手势行为
+        e.e.preventDefault()
+      })
+      
+      canvasFabric.on('mouse:down', (e) => {
+        touchStartTime = Date.now()
+        if (e.pointer) {
+          touchStartPos = { x: e.pointer.x, y: e.pointer.y }
+        }
+      })
+      
+      canvasFabric.on('mouse:up', (e) => {
+        const touchEndTime = Date.now()
+        const touchDuration = touchEndTime - touchStartTime
+        
+        // 如果是快速点击（小于200ms）且移动距离很小，则选中对象
+        if (touchDuration < 200 && e.pointer) {
+          const distance = Math.sqrt(
+            Math.pow(e.pointer.x - touchStartPos.x, 2) + 
+            Math.pow(e.pointer.y - touchStartPos.y, 2)
+          )
+          
+          if (distance < 10 && canvasFabric) {
+            const target = canvasFabric.findTarget(e.e as any, false)
+            if (target && target !== canvasFabric.backgroundImage) {
+              canvasFabric.setActiveObject(target)
+              canvasFabric.renderAll()
+            }
+          }
+        }
+      })
+    }
   }
 
   const adjustCanvasContainer = (container: HTMLDivElement, wrapper: HTMLDivElement) => {
