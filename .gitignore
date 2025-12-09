@@ -26,3 +26,7 @@ coverage
 *.njsproj
 *.sln
 *.sw?
+
+# Claude Code
+.claude/
+CLAUDE.md
