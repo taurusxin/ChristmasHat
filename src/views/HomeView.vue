@@ -14,9 +14,15 @@ let canvasFabric: fabric.Canvas
 let hatInstance: fabric.Image
 let imageWidth: number
 let imageHeight: number
-let isMobile = window.innerWidth <= 768
+const isMobile = ref(window.innerWidth <= 768)
+
+const handleResize = () => {
+  isMobile.value = window.innerWidth <= 768
+}
 
 onMounted(async () => {
+  window.addEventListener('resize', handleResize)
+
   try {
     const res = await fetch('./hats.json')
     const data = await res.json()
@@ -29,6 +35,8 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+
   // Clean up canvas instance when component unmounts
   if (canvasFabric) {
     canvasFabric.dispose()
@@ -85,7 +93,7 @@ const loadImage = () => {
 
         canvasFabric = new fabric.Canvas('cvs')
 
-        let e = isMobile ? 800 : 1600,
+        let e = isMobile.value ? 800 : 1600,
           scale = 1
         if (imageWidth > e) {
           canvasFabric.setWidth(e)
@@ -119,7 +127,7 @@ const switchHatInCanvas = () => {
   let hatChoose = hatsAvaliable[currentHat.value]
 
   let scale = imageWidth / 2 / hatChoose.naturalWidth
-  let e = isMobile ? 800 : 1600
+  let e = isMobile.value ? 800 : 1600
 
   if (imageWidth > e) {
     scale = e / 2 / hatChoose.naturalWidth
