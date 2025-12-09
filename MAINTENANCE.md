@@ -83,28 +83,14 @@ import { useOsTheme, darkTheme, type UploadFileInfo } from 'naive-ui'
 
 ## 架构优化
 
-### 6. 组件职责过重
+### ~~6. 组件职责过重~~ ✅ 已修复
 
-**位置**: `src/views/HomeView.vue`
+已拆分为 3 个 composables：
+- `src/composables/useHatManager.ts` - 帽子列表加载和选择
+- `src/composables/useCanvasEditor.ts` - Canvas 初始化、帽子添加、导出
+- `src/composables/useImageUpload.ts` - 图片上传和读取
 
-**问题**: 单个文件包含所有业务逻辑（371 行），包括：
-- 图片上传处理
-- Canvas 操作
-- 帽子管理
-- 导出功能
-- UI 渲染
-
-**建议**: 拆分为多个组合式函数（composables）：
-
-```
-src/
-├── composables/
-│   ├── useImageUpload.ts    # 图片上传逻辑
-│   ├── useCanvasEditor.ts   # Canvas 操作
-│   └── useHatManager.ts     # 帽子管理
-├── views/
-│   └── HomeView.vue         # 仅负责组装和 UI
-```
+HomeView.vue 从 390 行精简到约 300 行，仅负责组装和 UI 渲染。
 
 ---
 
@@ -197,7 +183,7 @@ try {
 |--------|------|------|------|
 | 高 | Canvas 实例泄漏 (#8) | 内存问题，长时间使用可能导致性能下降 | ✅ 已修复 |
 | 高 | 删除调试代码 (#4) | 生产环境不应有调试输出 | ✅ 已修复 |
-| 中 | 组件拆分 (#6) | 提高可维护性 | 待处理 |
+| 中 | 组件拆分 (#6) | 提高可维护性 | ✅ 已修复 |
 | 中 | 依赖更新 (#12) | 安全性和性能 | 待处理 |
 | 中 | 添加错误处理 (#7) | 用户体验 | 待处理 |
 | 低 | DOM 查询优化 (#1) | 代码风格，功能不受影响 | 待处理 |
