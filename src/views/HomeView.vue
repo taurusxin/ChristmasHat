@@ -96,8 +96,6 @@ const loadImage = () => {
           canvasFabric.setHeight(imageHeight)
         }
 
-        console.log(scale)
-
         let backgroundImage = new fabric.Image(img, {
           scaleX: scale,
           scaleY: scale,
