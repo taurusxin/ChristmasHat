@@ -2,7 +2,16 @@
 import { ImageOutline, DownloadOutline } from '@vicons/ionicons5'
 import type { UploadFileInfo } from 'naive-ui'
 import { saveAs } from 'file-saver'
+import { useI18n } from 'vue-i18n'
 import { useHatManager, useCanvasEditor, useImageUpload } from '@/composables'
+
+// i18n
+const { t, locale } = useI18n()
+
+// 语言切换
+const toggleLanguage = () => {
+  locale.value = locale.value === 'zh-CN' ? 'en-US' : 'zh-CN'
+}
 
 // Responsive state
 const isMobile = ref(window.innerWidth <= 768)
@@ -94,15 +103,51 @@ const download = () => {
 
 <template>
   <main>
+    <!-- 移动端语言切换浮动按钮 -->
+    <n-button 
+      class="lang-switch-mobile" 
+      circle
+      type="info"
+      size="large"
+      @click="toggleLanguage"
+      :title="locale === 'zh-CN' ? 'Switch to English' : '切换到中文'"
+    >
+      {{ locale === 'zh-CN' ? 'EN' : '中' }}
+    </n-button>
+    
     <div class="main-container">
       <div class="main-panel app-panel">
         <div class="panel-title">
-          <span class="title-text">给头像加圣诞帽</span>
+          <span class="title-text">{{ t('title') }}</span>
+        </div>
+        
+        <!-- PC端语言切换按钮 -->
+        <div class="lang-switch-desktop">
+          <n-button 
+            size="small"
+            quaternary
+            @click="toggleLanguage"
+            :title="locale === 'zh-CN' ? 'Switch to English' : '切换到中文'"
+          >
+            <template #icon>
+              <n-icon>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m5 8 6 6"/>
+                  <path d="m4 14 6-6 2-3"/>
+                  <path d="M2 5h12"/>
+                  <path d="M7 2h1"/>
+                  <path d="m22 22-5-10-5 10"/>
+                  <path d="M14 18h6"/>
+                </svg>
+              </n-icon>
+            </template>
+            {{ locale === 'zh-CN' ? 'English' : '中文' }}
+          </n-button>
         </div>
         <div>
-          <h3 class="sub-title">选择要制作的图片</h3>
+          <h3 class="sub-title">{{ t('subtitle.selectImage') }}</h3>
           <n-input-group>
-            <n-input class="choose-image" :placeholder="imagePath ? imagePath : '戳右边上传头像→'" :readonly="true"
+            <n-input class="choose-image" :placeholder="imagePath ? imagePath : t('placeholders.uploadHint')" :readonly="true"
               type="text" />
             <n-upload :abstract="true" ref="uploadImageRef" accept="image/*" @change="handleUploadImage">
               <n-button type="primary" ghost @click="chooseImage" icon-placement="left">
@@ -111,14 +156,14 @@ const download = () => {
                     <image-outline />
                   </n-icon>
                 </template>
-                选择图片
+                {{ t('buttons.selectImage') }}
               </n-button>
             </n-upload>
           </n-input-group>
         </div>
 
         <div>
-          <h3 class="sub-title mt-15">选择一顶圣诞帽（左右滑动）</h3>
+          <h3 class="sub-title mt-15">{{ t('subtitle.selectHat') }}</h3>
           <n-spin :show="isHatLoading">
             <n-carousel v-if="hatList.length > 0" :space-between="15" :loop="false" :show-dots="false"
               :current-index="currentHat" slides-per-view="auto" centered-slides draggable
@@ -129,7 +174,7 @@ const download = () => {
               </n-carousel-item>
             </n-carousel>
             <n-alert v-if="hatLoadError && !isHatLoading" type="warning" :bordered="false">
-              帽子列表加载失败，已使用备用资源
+              {{ t('messages.hatLoadError') }}
             </n-alert>
           </n-spin>
           <div class="up-arrow" v-if="hatList.length > 0">
@@ -143,22 +188,22 @@ const download = () => {
           </div>
         </div>
 
-        <h3 class="sub-title mt-15">制作完成了就下载吧</h3>
+        <h3 class="sub-title mt-15">{{ t('subtitle.download') }}</h3>
         <n-button type="primary" ghost @click="save" :disabled="imagePath == ''" icon-placement="left">
           <template #icon>
             <n-icon>
               <download-outline />
             </n-icon>
           </template>
-          保存图片
+          {{ t('buttons.saveImage') }}
         </n-button>
       </div>
 
       <div class="canvas-panel app-panel" v-show="imageFile">
         <div class="panel-title">
-          <span class="title-text">预览和调整</span>
+          <span class="title-text">{{ t('messages.previewAndAdjust') }}</span>
         </div>
-        <n-spin :show="isImageLoading" description="正在处理图片...">
+        <n-spin :show="isImageLoading" :description="t('messages.processing')">
           <img ref="imgRef" src="" alt="" style="display: none" />
           <div ref="cvsContainerRef" class="cvs-container">
             <canvas ref="cvsRef"></canvas>
@@ -166,8 +211,8 @@ const download = () => {
         </n-spin>
       </div>
 
-      <n-modal v-model:show="previewShow" preset="dialog" title="保存图片">
-        <p>{{ isMobile ? '长按来保存图片' : '右键另存为图片或者点击按钮下载' }}</p>
+      <n-modal v-model:show="previewShow" preset="dialog" :title="t('messages.saveImageDialog')">
+        <p>{{ isMobile ? t('messages.mobileHint') : t('messages.desktopHint') }}</p>
         <img id="preview-image" :src="previewImage" alt="" />
         <n-button type="primary" ghost @click="download" :disabled="imagePath == ''" icon-placement="left"
           v-show="!isMobile">
@@ -176,7 +221,7 @@ const download = () => {
               <download-outline />
             </n-icon>
           </template>
-          下载到本地
+          {{ t('buttons.downloadLocal') }}
         </n-button>
       </n-modal>
     </div>
@@ -267,5 +312,90 @@ main {
 #preview-image {
   margin-top: 8px;
   width: 100%;
+}
+
+/* 移动端语言切换按钮 - 浮动样式 */
+.lang-switch-mobile {
+  position: fixed !important;
+  top: 1rem !important;
+  right: 1rem !important;
+  z-index: 1000 !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15) !important;
+  transition: all 0.2s ease !important;
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+}
+
+.lang-switch-mobile:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 0.375rem 1rem rgba(0, 0, 0, 0.2) !important;
+}
+
+.lang-switch-mobile:active {
+  transform: scale(0.95) !important;
+  box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.2) !important;
+}
+
+/* PC端语言切换按钮 - 内联样式 */
+.lang-switch-desktop {
+  position: absolute;
+  top: 0.75rem;
+  right: 1rem;
+  display: none;
+}
+
+.lang-switch-desktop .n-button {
+  font-size: 0.875rem;
+  opacity: 0.7;
+  transition: all 0.2s ease;
+  border-radius: 0.375rem;
+}
+
+.lang-switch-desktop .n-button:hover {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+/* 响应式显示控制 */
+@media (min-width: 769px) {
+  .lang-switch-mobile {
+    display: none !important;
+  }
+  
+  .lang-switch-desktop {
+    display: block;
+  }
+}
+
+@media (max-width: 768px) {
+  .lang-switch-mobile {
+    display: flex !important;
+    width: 50px !important;
+    height: 50px !important;
+    font-size: 0.85rem !important;
+  }
+  
+  .lang-switch-desktop {
+    display: none;
+  }
+}
+
+/* 超小屏幕优化 */
+@media (max-width: 480px) {
+  .lang-switch-mobile {
+    top: 0.75rem !important;
+    right: 0.75rem !important;
+    width: 46px !important;
+    height: 46px !important;
+    font-size: 0.75rem !important;
+  }
 }
 </style>
