@@ -30,7 +30,7 @@ export function useHatManager() {
     loadError.value = false
 
     try {
-      const res = await fetch('/hats.json')
+      const res = await fetch('./hats.json')
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`)
       }
