@@ -26,23 +26,13 @@ const imgRef = ref<HTMLImageElement>()
 
 ---
 
-### 2. 非响应式变量混用
+### 2. 非响应式变量混用（部分修复 ✅）
 
-**位置**: `src/views/HomeView.vue:13-17`
+**已修复**：`isMobile` 已改为响应式变量，并添加 resize 事件监听。
 
-**问题**: `canvasFabric`、`hatInstance`、`imageWidth`、`imageHeight`、`isMobile` 使用普通变量而非响应式变量，可能导致状态同步问题。
-
-```typescript
-// 当前实现
-let canvasFabric: fabric.Canvas
-let hatInstance: fabric.Image
-let imageWidth: number
-let isMobile = window.innerWidth <= 768
-```
-
-**建议**:
-- `isMobile` 应使用响应式变量并监听 `resize` 事件
-- Canvas 相关变量可用 `shallowRef` 包装，避免深层响应式开销
+**仍存在**：`canvasFabric`、`hatInstance`、`imageWidth`、`imageHeight` 仍使用普通变量。
+- 这些变量不影响模板渲染，改为响应式收益不大
+- 如需优化可用 `shallowRef` 包装 Canvas 相关变量
 
 ---
 
@@ -71,17 +61,9 @@ const CONFIG = {
 
 ---
 
-### 4. 遗留的调试代码
+### ~~4. 遗留的调试代码~~ ✅ 已修复
 
-**位置**: `src/views/HomeView.vue:86`
-
-**问题**: 生产代码中保留了 `console.log`。
-
-```typescript
-console.log(scale)
-```
-
-**建议**: 删除或替换为条件编译。
+已在 commit `e1f9fa3` 中删除 `console.log(scale)`。
 
 ---
 
@@ -101,61 +83,31 @@ import { useOsTheme, darkTheme, type UploadFileInfo } from 'naive-ui'
 
 ## 架构优化
 
-### 6. 组件职责过重
+### ~~6. 组件职责过重~~ ✅ 已修复
 
-**位置**: `src/views/HomeView.vue`
+已拆分为 3 个 composables：
+- `src/composables/useHatManager.ts` - 帽子列表加载和选择
+- `src/composables/useCanvasEditor.ts` - Canvas 初始化、帽子添加、导出
+- `src/composables/useImageUpload.ts` - 图片上传和读取
 
-**问题**: 单个文件包含所有业务逻辑（371 行），包括：
-- 图片上传处理
-- Canvas 操作
-- 帽子管理
-- 导出功能
-- UI 渲染
-
-**建议**: 拆分为多个组合式函数（composables）：
-
-```
-src/
-├── composables/
-│   ├── useImageUpload.ts    # 图片上传逻辑
-│   ├── useCanvasEditor.ts   # Canvas 操作
-│   └── useHatManager.ts     # 帽子管理
-├── views/
-│   └── HomeView.vue         # 仅负责组装和 UI
-```
+HomeView.vue 从 390 行精简到约 300 行，仅负责组装和 UI 渲染。
 
 ---
 
-### 7. 缺少错误处理 UI
+### ~~7. 缺少错误处理 UI~~ ✅ 已修复
 
-**位置**: `src/views/HomeView.vue:19-29`
-
-**问题**: 帽子加载失败时静默回退到 CDN，用户无感知。图片加载也没有错误处理。
-
-```typescript
-try {
-  const res = await fetch('./hats.json')
-  // ...
-} catch (_) {
-  // 静默回退
-}
-```
-
-**建议**: 添加加载状态和错误提示。
+已添加：
+- 帽子列表加载时显示 loading spinner
+- 帽子加载失败时显示警告提示
+- 图片处理时显示 loading 状态
 
 ---
 
-### 8. Canvas 实例泄漏
+### ~~8. Canvas 实例泄漏~~ ✅ 已修复
 
-**位置**: `src/views/HomeView.vue:73`
-
-**问题**: 每次加载新图片都创建新的 `fabric.Canvas` 实例，但未销毁旧实例。
-
-```typescript
-canvasFabric = new fabric.Canvas('cvs')
-```
-
-**建议**: 在创建新实例前调用 `canvasFabric.dispose()`，或复用实例。
+已在 commit `fcdf69a` 中修复：
+- 创建新 Canvas 前调用 `dispose()` 销毁旧实例
+- 添加 `onUnmounted` 钩子清理资源
 
 ---
 
@@ -217,12 +169,12 @@ canvasFabric = new fabric.Canvas('cvs')
 
 ## 优化优先级建议
 
-| 优先级 | 项目 | 原因 |
-|--------|------|------|
-| 高 | Canvas 实例泄漏 (#8) | 内存问题，长时间使用可能导致性能下降 |
-| 高 | 删除调试代码 (#4) | 生产环境不应有调试输出 |
-| 中 | 组件拆分 (#6) | 提高可维护性 |
-| 中 | 依赖更新 (#12) | 安全性和性能 |
-| 中 | 添加错误处理 (#7) | 用户体验 |
-| 低 | DOM 查询优化 (#1) | 代码风格，功能不受影响 |
-| 低 | 魔法数字 (#3) | 代码可读性 |
+| 优先级 | 项目 | 原因 | 状态 |
+|--------|------|------|------|
+| 高 | Canvas 实例泄漏 (#8) | 内存问题，长时间使用可能导致性能下降 | ✅ 已修复 |
+| 高 | 删除调试代码 (#4) | 生产环境不应有调试输出 | ✅ 已修复 |
+| 中 | 组件拆分 (#6) | 提高可维护性 | ✅ 已修复 |
+| 中 | 依赖更新 (#12) | 安全性和性能 | 待处理 |
+| 中 | 添加错误处理 (#7) | 用户体验 | ✅ 已修复 |
+| 低 | DOM 查询优化 (#1) | 代码风格，功能不受影响 | 待处理 |
+| 低 | 魔法数字 (#3) | 代码可读性 | 待处理 |

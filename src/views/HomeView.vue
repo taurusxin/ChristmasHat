@@ -1,169 +1,90 @@
 <script setup lang="ts">
 import { ImageOutline, DownloadOutline } from '@vicons/ionicons5'
 import type { UploadFileInfo } from 'naive-ui'
-import { fabric } from 'fabric'
 import { saveAs } from 'file-saver'
+import { useHatManager, useCanvasEditor, useImageUpload } from '@/composables'
 
-const imageFile = ref()
-const imagePath = ref('')
-const hatList = ref<string[]>([])
-const currentHat = ref(0)
+// Responsive state
+const isMobile = ref(window.innerWidth <= 768)
+const handleResize = () => {
+  isMobile.value = window.innerWidth <= 768
+}
+
+// Composables
+const { hatList, currentHat, selectHat, isLoading: isHatLoading, loadError: hatLoadError } = useHatManager()
+const { imageFile, imagePath, loadImage, isLoading: isImageLoading } = useImageUpload()
+const { isCanvasReady, initCanvas, addHat, adjustCanvasContainer, toDataURL } = useCanvasEditor(isMobile)
+
+// Template refs
 const uploadImageRef = ref()
+const cvsRef = ref<HTMLCanvasElement>()
+const imgRef = ref<HTMLImageElement>()
+const cvsContainerRef = ref<HTMLDivElement>()
 
-let canvasFabric: fabric.Canvas
-let hatInstance: fabric.Image
-let imageWidth: number
-let imageHeight: number
-let isMobile = window.innerWidth <= 768
+// Preview modal
+const previewShow = ref(false)
+const previewImage = ref('')
 
-onMounted(async () => {
-  try {
-    const res = await fetch('./hats.json')
-    const data = await res.json()
-    hatList.value = Array.isArray(data) ? data : []
-  } catch (_) {
-    hatList.value = Array.from(new Array(30).keys()).map(
-      i => `https://tools.taurusxin.com/assets/hats/${i}.png`
-    )
-  }
+onMounted(() => {
+  window.addEventListener('resize', handleResize)
 })
 
 onUnmounted(() => {
-  // Clean up canvas instance when component unmounts
-  if (canvasFabric) {
-    canvasFabric.dispose()
-  }
+  window.removeEventListener('resize', handleResize)
 })
-
-const switchHat = (currentIndex: number, lastIndex: number) => {
-  currentHat.value = currentIndex
-  switchHatInCanvas()
-}
-
-const clickHat = (imageIndex: number) => {
-  currentHat.value = imageIndex
-}
 
 const chooseImage = () => {
   uploadImageRef.value.openOpenFileDialog()
 }
 
-const handleUploadImage = (options: {
+const handleUploadImage = async (options: {
   file: UploadFileInfo
   fileList: Array<UploadFileInfo>
   event?: Event
 }) => {
   imageFile.value = options.file.file
-  imagePath.value = imageFile.value.name
-  loadImage()
+  imagePath.value = imageFile.value?.name || ''
+
+  const dataUrl = await loadImage()
+  if (dataUrl && cvsRef.value && imgRef.value) {
+    await initCanvas(cvsRef.value, imgRef.value, dataUrl)
+    switchHatInCanvas()
+  }
 }
 
-const loadImage = () => {
-  if (imageFile.value != null) {
-    let file: File = imageFile.value
-    let cvs: HTMLCanvasElement = document.querySelector('#cvs') as HTMLCanvasElement
-    let img: HTMLImageElement = document.querySelector('#image') as HTMLImageElement
+const switchHat = (currentIndex: number, _lastIndex: number) => {
+  selectHat(currentIndex)
+  switchHatInCanvas()
+}
 
-    // load the image file
-    let reader: FileReader = new FileReader()
-    reader.readAsDataURL(file)
-    reader.onload = e => {
-      img.src = reader.result as string
-      img.onload = () => {
-        cvs.width = img.width
-        cvs.height = img.height
+const clickHat = (imageIndex: number) => {
+  selectHat(imageIndex)
+}
 
-        imageWidth = img.width
-        imageHeight = img.height
+const switchHatInCanvas = () => {
+  if (!isCanvasReady.value) return
 
-        cvs.style.display = 'block'
+  const hatsAvailable: NodeListOf<HTMLImageElement> = document.querySelectorAll('.carousel-img')
+  const hatChoose = hatsAvailable[currentHat.value]
+  if (!hatChoose) return
 
-        // Dispose old canvas instance to prevent memory leak
-        if (canvasFabric) {
-          canvasFabric.dispose()
-        }
+  addHat(hatChoose)
 
-        canvasFabric = new fabric.Canvas('cvs')
-
-        let e = isMobile ? 800 : 1600,
-          scale = 1
-        if (imageWidth > e) {
-          canvasFabric.setWidth(e)
-          canvasFabric.setHeight((e / imageWidth) * imageHeight)
-          scale = e / imageWidth
-        } else {
-          canvasFabric.setWidth(imageWidth)
-          canvasFabric.setHeight(imageHeight)
-        }
-
-        let backgroundImage = new fabric.Image(img, {
-          scaleX: scale,
-          scaleY: scale,
-          top: 0,
-          left: 0,
-          selectable: false,
-        })
-
-        canvasFabric.setBackgroundImage(backgroundImage, () => {})
-        switchHatInCanvas()
-      }
+  if (cvsContainerRef.value) {
+    const canvasWrapper = document.querySelector('.canvas-container') as HTMLDivElement
+    if (canvasWrapper) {
+      adjustCanvasContainer(cvsContainerRef.value, canvasWrapper)
     }
   }
 }
 
-const switchHatInCanvas = () => {
-  let hatsAvaliable: NodeListOf<HTMLImageElement> = document.querySelectorAll('.carousel-img')
-  if (hatInstance) {
-    canvasFabric.remove(hatInstance)
-  }
-  let hatChoose = hatsAvaliable[currentHat.value]
-
-  let scale = imageWidth / 2 / hatChoose.naturalWidth
-  let e = isMobile ? 800 : 1600
-
-  if (imageWidth > e) {
-    scale = e / 2 / hatChoose.naturalWidth
-  }
-
-  hatInstance = new fabric.Image(hatChoose, {
-    top: 40,
-    scaleX: scale,
-    scaleY: scale,
-    cornerColor: '#04b9d9',
-    cornerStrokeColor: '#fff',
-    cornerStyle: 'circle',
-    transparentCorners: false,
-    rotatingPointOffset: 30,
-    cornerSize: 36,
-  })
-  hatInstance.setControlVisible('mt', false)
-  canvasFabric.add(hatInstance)
-  hatInstance.centerH()
-
-  let cvsContainer = document.querySelector('.cvs-container') as HTMLDivElement
-  let canvasWrapperEl = document.querySelector('.canvas-container') as HTMLDivElement
-  let cvsContainerWidth = cvsContainer.offsetWidth
-  if ((canvasFabric.width as number) > cvsContainerWidth) {
-    canvasWrapperEl.style.transform = 'scale('.concat(
-      (cvsContainerWidth / (canvasFabric.width as number)).toString(),
-      ')'
-    )
-    canvasWrapperEl.style.width = '100%'
-    canvasWrapperEl.style.height =
-      (canvasFabric.height as number) * (cvsContainerWidth / (canvasFabric.width as number)) + 'px'
-  }
-}
-
-const previewShow = ref(false)
-const previewImage = ref('')
-
 const save = () => {
   previewShow.value = true
-  previewImage.value = canvasFabric.toDataURL()
+  previewImage.value = toDataURL()
 }
 
 const download = () => {
-  saveAs(canvasFabric.toDataURL(), 'christmas_hat_'.concat(new Date().getTime().toString(), '.png'))
+  saveAs(toDataURL(), `christmas_hat_${Date.now()}.png`)
 }
 </script>
 
@@ -203,27 +124,33 @@ const download = () => {
 
         <div>
           <h3 class="sub-title mt-15">选择一顶圣诞帽（左右滑动）</h3>
-          <n-carousel
-            :space-between="15"
-            :loop="false"
-            :show-dots="false"
-            :current-index="currentHat"
-            slides-per-view="auto"
-            centered-slides
-            draggable
-            @update:current-index="switchHat"
-          >
-            <n-carousel-item
-              class="hat-container"
-              style="height: calc(1rem + 100px); width: calc(1rem + 100px)"
-              v-for="(item, index) in hatList"
-              :key="index"
-              @click="clickHat(index)"
+          <n-spin :show="isHatLoading">
+            <n-carousel
+              v-if="hatList.length > 0"
+              :space-between="15"
+              :loop="false"
+              :show-dots="false"
+              :current-index="currentHat"
+              slides-per-view="auto"
+              centered-slides
+              draggable
+              @update:current-index="switchHat"
             >
-              <img class="carousel-img" :src="item" crossorigin="anonymous" />
-            </n-carousel-item>
-          </n-carousel>
-          <div class="up-arrow">
+              <n-carousel-item
+                class="hat-container"
+                style="height: calc(1rem + 100px); width: calc(1rem + 100px)"
+                v-for="(item, index) in hatList"
+                :key="index"
+                @click="clickHat(index)"
+              >
+                <img class="carousel-img" :src="item" crossorigin="anonymous" />
+              </n-carousel-item>
+            </n-carousel>
+            <n-alert v-if="hatLoadError && !isHatLoading" type="warning" :bordered="false">
+              帽子列表加载失败，已使用备用资源
+            </n-alert>
+          </n-spin>
+          <div class="up-arrow" v-if="hatList.length > 0">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               class="icon-tabler-arrow-up"
@@ -264,10 +191,12 @@ const download = () => {
         <div class="panel-title">
           <span class="title-text">预览和调整</span>
         </div>
-        <img id="image" src="" alt="" style="display: none" />
-        <div class="cvs-container">
-          <canvas id="cvs"></canvas>
-        </div>
+        <n-spin :show="isImageLoading" description="正在处理图片...">
+          <img ref="imgRef" src="" alt="" style="display: none" />
+          <div ref="cvsContainerRef" class="cvs-container">
+            <canvas ref="cvsRef"></canvas>
+          </div>
+        </n-spin>
       </div>
 
       <n-modal v-model:show="previewShow" preset="dialog" title="保存图片">
@@ -370,8 +299,8 @@ main {
   stroke: var(--color-text);
 }
 
-#cvs {
-  display: none;
+.cvs-container canvas {
+  display: block;
 }
 
 #preview-image {
