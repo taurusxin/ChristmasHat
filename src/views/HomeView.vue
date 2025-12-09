@@ -42,8 +42,11 @@ const handleUploadImage = async (options: {
   fileList: Array<UploadFileInfo>
   event?: Event
 }) => {
-  imageFile.value = options.file.file
-  imagePath.value = imageFile.value?.name || ''
+  const file = options.file.file
+  if (!file) return
+  
+  imageFile.value = file
+  imagePath.value = file.name
 
   const dataUrl = await loadImage()
   if (dataUrl && cvsRef.value && imgRef.value) {
@@ -59,6 +62,7 @@ const switchHat = (currentIndex: number, _lastIndex: number) => {
 
 const clickHat = (imageIndex: number) => {
   selectHat(imageIndex)
+  switchHatInCanvas()
 }
 
 const switchHatInCanvas = () => {
@@ -98,18 +102,9 @@ const download = () => {
         <div>
           <h3 class="sub-title">选择要制作的图片</h3>
           <n-input-group>
-            <n-input
-              class="choose-image"
-              :placeholder="imagePath ? imagePath : '戳右边上传头像→'"
-              :readonly="true"
-              type="text"
-            />
-            <n-upload
-              :abstract="true"
-              ref="uploadImageRef"
-              accept="image/*"
-              @change="handleUploadImage"
-            >
+            <n-input class="choose-image" :placeholder="imagePath ? imagePath : '戳右边上传头像→'" :readonly="true"
+              type="text" />
+            <n-upload :abstract="true" ref="uploadImageRef" accept="image/*" @change="handleUploadImage">
               <n-button type="primary" ghost @click="chooseImage" icon-placement="left">
                 <template #icon>
                   <n-icon>
@@ -125,24 +120,11 @@ const download = () => {
         <div>
           <h3 class="sub-title mt-15">选择一顶圣诞帽（左右滑动）</h3>
           <n-spin :show="isHatLoading">
-            <n-carousel
-              v-if="hatList.length > 0"
-              :space-between="15"
-              :loop="false"
-              :show-dots="false"
-              :current-index="currentHat"
-              slides-per-view="auto"
-              centered-slides
-              draggable
-              @update:current-index="switchHat"
-            >
-              <n-carousel-item
-                class="hat-container"
-                style="height: calc(1rem + 100px); width: calc(1rem + 100px)"
-                v-for="(item, index) in hatList"
-                :key="index"
-                @click="clickHat(index)"
-              >
+            <n-carousel v-if="hatList.length > 0" :space-between="15" :loop="false" :show-dots="false"
+              :current-index="currentHat" slides-per-view="auto" centered-slides draggable
+              @update:current-index="switchHat">
+              <n-carousel-item class="hat-container" style="height: calc(1rem + 100px); width: calc(1rem + 100px)"
+                v-for="(item, index) in hatList" :key="index" @click="clickHat(index)">
                 <img class="carousel-img" :src="item" crossorigin="anonymous" />
               </n-carousel-item>
             </n-carousel>
@@ -151,17 +133,8 @@ const download = () => {
             </n-alert>
           </n-spin>
           <div class="up-arrow" v-if="hatList.length > 0">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="icon-tabler-arrow-up"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              stroke-width="1.5"
-              fill="none"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon-tabler-arrow-up" width="20" height="20"
+              viewBox="0 0 24 24" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
               <path stroke="none" d="M0 0h24v24H0z" fill="none" />
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="18" y1="11" x2="12" y2="5" />
@@ -171,13 +144,7 @@ const download = () => {
         </div>
 
         <h3 class="sub-title mt-15">制作完成了就下载吧</h3>
-        <n-button
-          type="primary"
-          ghost
-          @click="save"
-          :disabled="imagePath == ''"
-          icon-placement="left"
-        >
+        <n-button type="primary" ghost @click="save" :disabled="imagePath == ''" icon-placement="left">
           <template #icon>
             <n-icon>
               <download-outline />
@@ -202,14 +169,8 @@ const download = () => {
       <n-modal v-model:show="previewShow" preset="dialog" title="保存图片">
         <p>{{ isMobile ? '长按来保存图片' : '右键另存为图片或者点击按钮下载' }}</p>
         <img id="preview-image" :src="previewImage" alt="" />
-        <n-button
-          type="primary"
-          ghost
-          @click="download"
-          :disabled="imagePath == ''"
-          icon-placement="left"
-          v-show="!isMobile"
-        >
+        <n-button type="primary" ghost @click="download" :disabled="imagePath == ''" icon-placement="left"
+          v-show="!isMobile">
           <template #icon>
             <n-icon>
               <download-outline />

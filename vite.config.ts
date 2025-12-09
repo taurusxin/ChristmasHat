@@ -29,5 +29,19 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
-  base: './'
+  base: './',
+  server: {
+    proxy: {
+      '/proxy/tools': {
+        target: 'https://tools.taurusxin.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/proxy\/tools/, '')
+      },
+      '/proxy/assets': {
+        target: 'https://assets.taurusxin.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/proxy\/assets/, '')
+      }
+    }
+  }
 })
