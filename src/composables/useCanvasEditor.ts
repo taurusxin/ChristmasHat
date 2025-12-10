@@ -10,7 +10,7 @@ const CANVAS_CONFIG = {
     cornerStyle: 'circle' as const,
     transparentCorners: false,
     rotatingPointOffset: 30,
-    cornerSize: 36,
+    cornerSize: 16,
   },
 }
 
@@ -104,7 +104,7 @@ export function useCanvasEditor(isMobile: Ref<boolean>) {
       cornerStyle: CANVAS_CONFIG.hat.cornerStyle,
       transparentCorners: CANVAS_CONFIG.hat.transparentCorners,
       rotatingPointOffset: CANVAS_CONFIG.hat.rotatingPointOffset,
-      cornerSize: isMobile.value ? 40 : CANVAS_CONFIG.hat.cornerSize, // 移动端更大的控制点
+      cornerSize: isMobile.value ? 24 : CANVAS_CONFIG.hat.cornerSize, // 移动端更大的控制点
       hasRotatingPoint: true
     })
 
