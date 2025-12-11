@@ -3,14 +3,22 @@ import { ImageOutline, DownloadOutline } from '@vicons/ionicons5'
 import type { UploadFileInfo } from 'naive-ui'
 import { saveAs } from 'file-saver'
 import { useI18n } from 'vue-i18n'
-import { useHatManager, useCanvasEditor, useImageUpload } from '@/composables'
+import { useRouter, useRoute } from 'vue-router'
+import { useHatManager, useCanvasEditor, useImageUpload, useSEO } from '@/composables'
 
 // i18n
 const { t, locale } = useI18n()
+const router = useRouter()
+const route = useRoute()
+
+// SEO
+useSEO()
 
 // 语言切换
 const toggleLanguage = () => {
-  locale.value = locale.value === 'zh-CN' ? 'en-US' : 'zh-CN'
+  const currentLang = route.params.lang as string
+  const newLang = currentLang === 'zh' ? 'en' : 'zh'
+  router.push(`/${newLang}`)
 }
 
 // Responsive state
@@ -123,9 +131,9 @@ const icpNumber = '浙ICP备2022025362号-1'
       type="info"
       size="large"
       @click="toggleLanguage"
-      :title="locale === 'zh-CN' ? 'Switch to English' : '切换到中文'"
+      :title="route.params.lang === 'zh' ? 'Switch to English' : '切换到中文'"
     >
-      {{ locale === 'zh-CN' ? 'EN' : '中' }}
+      {{ route.params.lang === 'zh' ? 'EN' : '中' }}
     </n-button>
 
     <div class="main-container">
@@ -140,7 +148,7 @@ const icpNumber = '浙ICP备2022025362号-1'
             size="small"
             quaternary
             @click="toggleLanguage"
-            :title="locale === 'zh-CN' ? 'Switch to English' : '切换到中文'"
+            :title="route.params.lang === 'zh' ? 'Switch to English' : '切换到中文'"
           >
             <template #icon>
               <n-icon>
@@ -164,7 +172,7 @@ const icpNumber = '浙ICP备2022025362号-1'
                 </svg>
               </n-icon>
             </template>
-            {{ locale === 'zh-CN' ? 'English' : '中文' }}
+            {{ route.params.lang === 'zh' ? 'English' : '中文' }}
           </n-button>
         </div>
         <div>

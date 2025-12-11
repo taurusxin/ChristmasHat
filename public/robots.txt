@@ -1,0 +1,29 @@
+# robots.txt for Christmas Hat Generator
+# https://tools.taurusxin.com/hat/
+
+User-agent: *
+Allow: /
+
+# Disallow unnecessary files
+Disallow: /assets/
+Disallow: /*.js
+Disallow: /*.css
+
+# Sitemap
+Sitemap: https://tools.taurusxin.com/hat/sitemap.xml
+
+# Popular search engines
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Baiduspider
+Allow: /
+
+User-agent: Sogou web spider
+Allow: /
+
+User-agent: 360Spider
+Allow: /
