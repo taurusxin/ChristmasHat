@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  <!-- 头像加圣诞帽 | Christmas Hat Generator -->
+  <sitemap>
+    <loc>https://tools.taurusxin.com/hat/sitemap.xml</loc>
+    <lastmod>2025-12-11</lastmod>
+  </sitemap>
+  
+  <!-- 
+    其他工具项目可以在此添加
+    Add other tool projects here
+    
+    示例 Example:
+    <sitemap>
+      <loc>https://tools.taurusxin.com/other-tool/sitemap.xml</loc>
+      <lastmod>2025-12-11</lastmod>
+    </sitemap>
+  -->
+  
+</sitemapindex>

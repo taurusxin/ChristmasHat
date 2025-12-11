@@ -1,0 +1,27 @@
+# robots.txt for TaurusXin Tools
+# https://tools.taurusxin.com/
+
+User-agent: *
+Allow: /
+
+# 主站点地图索引 (Main Sitemap Index)
+Sitemap: https://tools.taurusxin.com/sitemap.xml
+
+# 子项目站点地图 (Sub-project Sitemaps)
+Sitemap: https://tools.taurusxin.com/hat/sitemap.xml
+
+# 流行搜索引擎 (Popular Search Engines)
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Baiduspider
+Allow: /
+
+User-agent: Sogou web spider
+Allow: /
+
+User-agent: 360Spider
+Allow: /

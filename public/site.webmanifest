@@ -1,14 +1,25 @@
 {
-    "name": "",
-    "short_name": "",
-    "icons": [
-        {
-            "src": "/android-chrome-96x96.png",
-            "sizes": "96x96",
-            "type": "image/png"
-        }
-    ],
-    "theme_color": "#ffffff",
-    "background_color": "#ffffff",
-    "display": "standalone"
+  "name": "头像加圣诞帽 | Christmas Hat Generator",
+  "short_name": "Christmas Hat",
+  "description": "免费在线头像加圣诞帽 | Free Christmas Hat Generator",
+  "start_url": "/hat/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#c41e3a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/android-chrome-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["photo", "entertainment", "utilities"],
+  "lang": "zh-CN",
+  "dir": "ltr"
 }

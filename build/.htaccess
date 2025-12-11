@@ -1,0 +1,89 @@
+# Apache Configuration for TaurusXin Tools (Root Directory)
+# 工具网站根目录配置
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  
+  # Redirect HTTP to HTTPS (optional, uncomment if needed)
+  # RewriteCond %{HTTPS} off
+  # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+# Gzip 压缩 (Compression)
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json application/xml image/svg+xml
+</IfModule>
+
+# 浏览器缓存控制 (Browser Caching)
+<IfModule mod_expires.c>
+  ExpiresActive On
+  
+  # 站点地图和 robots.txt 缓存时间较短，便于更新
+  ExpiresByType text/xml "access plus 1 day"
+  ExpiresByType text/plain "access plus 1 day"
+  
+  # 图片缓存 1 年
+  ExpiresByType image/jpg "access plus 1 year"
+  ExpiresByType image/jpeg "access plus 1 year"
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType image/gif "access plus 1 year"
+  ExpiresByType image/webp "access plus 1 year"
+  ExpiresByType image/svg+xml "access plus 1 year"
+  ExpiresByType image/x-icon "access plus 1 year"
+  
+  # CSS 和 JS 缓存
+  ExpiresByType text/css "access plus 1 month"
+  ExpiresByType application/javascript "access plus 1 month"
+  ExpiresByType text/javascript "access plus 1 month"
+  
+  # HTML 缓存
+  ExpiresByType text/html "access plus 1 hour"
+</IfModule>
+
+# 缓存控制头 (Cache-Control Headers)
+<IfModule mod_headers.c>
+  # sitemap.xml 和 robots.txt 短期缓存
+  <FilesMatch "\.(xml|txt)$">
+    Header set Cache-Control "max-age=86400, public"
+  </FilesMatch>
+  
+  # 图片长期缓存
+  <FilesMatch "\.(jpg|jpeg|png|gif|webp|svg|ico)$">
+    Header set Cache-Control "max-age=31536000, public"
+  </FilesMatch>
+  
+  # CSS 和 JS 缓存
+  <FilesMatch "\.(css|js)$">
+    Header set Cache-Control "max-age=2592000, public"
+  </FilesMatch>
+  
+  # HTML 短期缓存
+  <FilesMatch "\.(html|htm)$">
+    Header set Cache-Control "max-age=3600, must-revalidate"
+  </FilesMatch>
+  
+  # 安全头
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set X-XSS-Protection "1; mode=block"
+  
+  # 跨域资源共享 (CORS)
+  Header set Access-Control-Allow-Origin "*"
+</IfModule>
+
+# 字符编码
+AddDefaultCharset UTF-8
+AddCharset UTF-8 .html .css .js .xml .json .txt
+
+# 安全设置 (Security)
+<IfModule mod_rewrite.c>
+  # 禁止访问隐藏文件
+  RewriteCond %{SCRIPT_FILENAME} -d [OR]
+  RewriteCond %{SCRIPT_FILENAME} -f
+  RewriteRule "(^|/)\." - [F]
+</IfModule>
+
+# 自定义错误页面（可选）
+# ErrorDocument 404 /404.html
+# ErrorDocument 500 /500.html

@@ -15,18 +15,22 @@ const router = createRouter({
     {
       path: '/:lang',
       name: 'home',
-      component: HomeView,
-      beforeEnter: (to, from, next) => {
-        const lang = to.params.lang as string
-        if (['en', 'zh'].includes(lang)) {
-          i18n.global.locale.value = lang === 'zh' ? 'zh-CN' : 'en-US'
-          next()
-        } else {
-          next('/zh')
-        }
-      }
+      component: HomeView
     }
   ]
+})
+
+// 使用全局导航守卫来处理语言切换
+router.beforeEach((to, from, next) => {
+  const lang = to.params.lang as string
+  if (lang && ['en', 'zh'].includes(lang)) {
+    i18n.global.locale.value = lang === 'zh' ? 'zh-CN' : 'en-US'
+    next()
+  } else if (to.path === '/') {
+    next()
+  } else {
+    next('/zh')
+  }
 })
 
 export default router
