@@ -4,7 +4,9 @@ import type { UploadFileInfo } from 'naive-ui'
 import { saveAs } from 'file-saver'
 import { useI18n } from 'vue-i18n'
 import { useRouter, useRoute } from 'vue-router'
+import { nextTick } from 'vue'
 import { useHatManager, useCanvasEditor, useImageUpload, useSEO } from '@/composables'
+import ShareButtons from '@/components/ShareButtons.vue'
 
 // i18n
 const { t, locale } = useI18n()
@@ -44,6 +46,7 @@ const uploadImageRef = ref()
 const cvsRef = ref<HTMLCanvasElement>()
 const imgRef = ref<HTMLImageElement>()
 const cvsContainerRef = ref<HTMLDivElement>()
+const downloadButtonRef = ref()
 
 // Preview modal
 const previewShow = ref(false)
@@ -106,9 +109,42 @@ const switchHatInCanvas = () => {
   }
 }
 
-const save = () => {
-  previewShow.value = true
+const save = async () => {
+  // 移除所有元素的焦点，避免 aria-hidden 警告
+  if (document.activeElement && document.activeElement instanceof HTMLElement) {
+    document.activeElement.blur()
+  }
+  
+  // 移除隐藏的文件输入框焦点
+  const hiddenInputs = document.querySelectorAll('input[type="file"]')
+  hiddenInputs.forEach((input) => {
+    if (input instanceof HTMLElement && document.activeElement === input) {
+      input.blur()
+    }
+  })
+  
   previewImage.value = toDataURL()
+  
+  // 使用 nextTick 确保在 DOM 更新后再打开模态框
+  await nextTick()
+  previewShow.value = true
+}
+
+// 模态框打开后的焦点处理
+const handleModalEnter = async () => {
+  await nextTick()
+  // 优先将焦点设置到下载按钮（如果存在且未禁用）
+  const buttonElement = downloadButtonRef.value?.$el as HTMLElement
+  if (buttonElement && !buttonElement.hasAttribute('disabled')) {
+    buttonElement.focus()
+  } else {
+    // 否则将焦点设置到模态框容器
+    const modalContent = document.querySelector('.n-modal__content') as HTMLElement
+    if (modalContent) {
+      modalContent.setAttribute('tabindex', '-1')
+      modalContent.focus()
+    }
+  }
 }
 
 const download = () => {
@@ -120,10 +156,38 @@ const goToBlog = () => {
 }
 
 const icpNumber = '浙ICP备2022025362号-1'
+
+// Banner 广告状态
+const showBanner = ref(true)
+const closeBanner = () => {
+  showBanner.value = false
+}
 </script>
 
 <template>
-  <main>
+  <div>
+    <!-- Banner 广告 -->
+    <div v-if="showBanner" class="banner-container">
+      <a href="https://justalk.com" target="_blank" rel="noopener noreferrer" class="banner-link">
+        <picture>
+          <source media="(max-width: 768px)" :srcset="'/src/assets/images/justalk-banner-mobile.png'" />
+          <img 
+            src="/src/assets/images/justalk-banner.png" 
+            alt="JusTalk Banner" 
+            class="banner-image"
+          />
+        </picture>
+      </a>
+      <!-- 移动端关闭按钮 -->
+      <button class="banner-close-btn" @click="closeBanner" aria-label="关闭广告">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <main>
     <!-- 移动端语言切换浮动按钮 -->
     <n-button
       class="lang-switch-mobile"
@@ -135,6 +199,11 @@ const icpNumber = '浙ICP备2022025362号-1'
     >
       {{ route.params.lang === 'zh' ? 'EN' : '中' }}
     </n-button>
+
+    <!-- 分享按钮浮动区域 -->
+    <div class="share-buttons-float">
+      <ShareButtons :image-url="previewImage" :disabled="previewImage == ''" />
+    </div>
 
     <div class="main-container">
       <div class="main-panel app-panel">
@@ -286,10 +355,18 @@ const icpNumber = '浙ICP备2022025362号-1'
         </n-spin>
       </div>
 
-      <n-modal v-model:show="previewShow" preset="dialog" :title="t('messages.saveImageDialog')">
+      <n-modal 
+        v-model:show="previewShow" 
+        preset="dialog" 
+        :title="t('messages.saveImageDialog')"
+        :mask-closable="true"
+        :close-on-esc="true"
+        @after-enter="handleModalEnter"
+      >
         <p>{{ isMobile ? t('messages.mobileHint') : t('messages.desktopHint') }}</p>
-        <img id="preview-image" :src="previewImage" alt="" />
+        <img id="preview-image" :src="previewImage" alt="Preview" tabindex="-1" />
         <n-button
+          ref="downloadButtonRef"
           type="primary"
           ghost
           @click="download"
@@ -306,15 +383,16 @@ const icpNumber = '浙ICP备2022025362号-1'
         </n-button>
       </n-modal>
     </div>
+    </main>
     <footer class="icp-footer">
       <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">{{ icpNumber }}</a>
     </footer>
-  </main>
+  </div>
 </template>
 
 <style scoped>
 main {
-  max-width: 1000px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 0.5rem;
 }
@@ -531,6 +609,157 @@ main {
     width: 46px !important;
     height: 46px !important;
     font-size: 0.75rem !important;
+  }
+}
+
+/* 分享按钮浮动样式 */
+.share-buttons-float {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 0.75rem;
+  border-radius: 1rem;
+  box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.share-buttons-float:hover {
+  box-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .share-buttons-float {
+    background: rgba(30, 30, 30, 0.95);
+  }
+}
+
+/* 移动端优化 */
+@media (max-width: 768px) {
+  .share-buttons-float {
+    bottom: 1rem;
+    right: 1rem;
+    padding: 0.5rem;
+    border-radius: 0.75rem;
+  }
+}
+
+/* 超小屏幕优化 */
+@media (max-width: 480px) {
+  .share-buttons-float {
+    bottom: 0.75rem;
+    right: 0.75rem;
+    padding: 0.4rem;
+    gap: 0.5rem;
+  }
+}
+
+/* Banner 广告样式 */
+.banner-container {
+  position: relative;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  overflow: hidden;
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1);
+}
+
+/* PC端Banner添加顶部和底部边距 */
+@media (min-width: 769px) {
+  .banner-container {
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+.banner-link {
+  display: block;
+  width: 100%;
+  line-height: 0;
+}
+
+.banner-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.banner-link:hover .banner-image {
+  transform: scale(1.02);
+}
+
+/* 移动端关闭按钮 */
+.banner-close-btn {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: rgba(128, 128, 128, 0.8);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.banner-close-btn svg {
+  color: white;
+  stroke: white;
+}
+
+.banner-close-btn:hover {
+  background-color: rgba(100, 100, 100, 0.9);
+  transform: scale(1.1);
+}
+
+.banner-close-btn:active {
+  transform: scale(0.95);
+}
+
+/* PC端隐藏关闭按钮 */
+@media (min-width: 769px) {
+  .banner-close-btn {
+    display: none;
+  }
+}
+
+/* 移动端关闭按钮显示 */
+@media (max-width: 768px) {
+  .banner-close-btn {
+    display: flex;
+  }
+  
+  .banner-container {
+    margin-bottom: 1rem;
+  }
+}
+
+/* 超小屏幕调整 */
+@media (max-width: 480px) {
+  .banner-close-btn {
+    width: 28px;
+    height: 28px;
+    top: 0.5rem;
+    left: 0.5rem;
+  }
+  
+  .banner-close-btn svg {
+    width: 14px;
+    height: 14px;
   }
 }
 </style>

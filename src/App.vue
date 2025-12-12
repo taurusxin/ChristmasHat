@@ -8,7 +8,9 @@ const theme = computed(() => (osThemeRef.value === 'dark' ? darkTheme : undefine
 
 <template>
   <n-config-provider :theme="theme">
-    <RouterView />
+    <n-message-provider>
+      <RouterView />
+    </n-message-provider>
   </n-config-provider>
 </template>
 
