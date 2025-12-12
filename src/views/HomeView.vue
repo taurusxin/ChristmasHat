@@ -745,6 +745,7 @@ main {
   
   .banner-container {
     margin-bottom: 1rem;
+    padding-top: 2.6rem;
   }
 }
 
